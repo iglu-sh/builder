@@ -7,13 +7,13 @@ export const post = [
       return res.status(405).send('Method Not Allowed');
     }
 
-    if(!req.query.repo){
+    if(!req.body.repo){
       res.status(400).json({
         error: "The repository is missing"
       })
     }
 
-    const child = Bun.spawn(["./clone.py", "--repo", req.query.repo, "--dir", process.env.BUILD_DIR], {
+    const child = Bun.spawn(["./clone.py", "--repo", req.body.repo, "--dir", process.env.BUILD_DIR], {
       cwd: "./lib",
     })
 
