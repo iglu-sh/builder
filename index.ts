@@ -15,6 +15,11 @@ envs.forEach(env => {
   }
 })
 
+if(process.env.BUILD_DIR === "./"){
+  console.error("BUILD_DIR could not be \"./\"")
+  process.exit(1)
+}
+
 
 const app = require('express')()
 

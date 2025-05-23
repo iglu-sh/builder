@@ -15,6 +15,7 @@
   "type": "module",
   "dependencies": {
     "express": "^5.1.0",
-    "express-file-routing": "^3.1.0"
+    "express-file-routing": "^3.1.0",
+    "websocket-express": "^3.1.2"
   }
 }

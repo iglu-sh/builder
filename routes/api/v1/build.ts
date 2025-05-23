@@ -13,9 +13,19 @@ export const post = [
       })
     }
 
+
     const child = Bun.spawn(["./build.py", "--command", req.body.command, "--dir", process.env.BUILD_DIR], {
       cwd: "./lib",
+      stdout: "pipe",
+      stderr: "pipe",
     })
+
+    for await (const chunk of child.stdout) {
+      const lines = new TextDecoder().decode(chunk).split("\n")
+      for (const line of lines) {
+        console.log(line)
+      }
+    }
 
     await child.exited
 

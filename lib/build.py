@@ -16,7 +16,21 @@ if not os.path.exists(args.dir):
 
 # Check if command start with nix or nix-build
 if args.command.split(" ")[0] in ["nix", "nix-build"]:
-    child = subprocess.run(args.command.split(" "), shell=False, cwd=args.dir, text=True)
+    child = subprocess.Popen(
+        args.command.split(" "),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+        cwd=args.dir
+    )
+
+    for line in child.stdout:
+        print(line, end='')
+
+    child.wait()
+
+    #child = subprocess.run(args.command.split(" "), shell=False, cwd=args.dir, text=True)
     if(child.returncode != 0):
         exit(1)
 else:
