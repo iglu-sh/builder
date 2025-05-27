@@ -7,7 +7,11 @@ export const post = [
       return res.status(405).send('Method Not Allowed');
     }
 
-    if(!req.body.command){
+    ///////////////////////////////////////
+    // THIS DOES CURRENTLY NOT WORK!!!!! //
+    ///////////////////////////////////////
+
+    if(!req.body.buildOptions.command){
       res.status(400).json({
         error: "The command is missing"
       })

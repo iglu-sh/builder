@@ -39,6 +39,7 @@
               iglu.flakecheck
               python3
               python312Packages.gitpython
+              python312Packages.jinja2
             ];
             shellHook = ''
               exec zsh
