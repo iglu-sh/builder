@@ -1,4 +1,5 @@
 import bodyParser, {type Request, type Response} from 'express'
+import { Validator } from 'jsonschema';
 
 export const post = [
   bodyParser.json(),
@@ -7,18 +8,18 @@ export const post = [
       return res.status(405).send('Method Not Allowed');
     }
 
-    ///////////////////////////////////////
-    // THIS DOES CURRENTLY NOT WORK!!!!! //
-    ///////////////////////////////////////
+    let validator = new Validator();
+    const bodySchema = require("../../../schemas/bodySchema.json");
+    let validate = validator.validate(req.body, bodySchema)
 
-    if(!req.body.buildOptions.command){
+
+    if(!validate.valid){
       res.status(400).json({
-        error: "The command is missing"
+        error: "JSON schema is not valid."
       })
     }
 
-
-    const child = Bun.spawn(["./build.py", "--command", req.body.command, "--dir", process.env.BUILD_DIR], {
+    const child = Bun.spawn(["./build.py", "--json", JSON.stringify(req.body)], {
       cwd: "./lib",
       stdout: "pipe",
       stderr: "pipe",
@@ -27,7 +28,7 @@ export const post = [
     for await (const chunk of child.stdout) {
       const lines = new TextDecoder().decode(chunk).split("\n")
       for (const line of lines) {
-        console.log(line)
+        console.log("[STDOUT]:", line)
       }
     }
 

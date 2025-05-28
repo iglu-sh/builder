@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "git": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string" },
+        "branch": { "type": "string" },
+        "gitUsername": { "type": "string" },
+        "gitKey": { "type": "string" },
+        "requiresAuth": { "type": "boolean" },
+        "noClone": { "type": "boolean" }
+      },
+      "required": ["noClone"],
+      "additionalProperties": false
+    },
+    "buildOptions": {
+      "type": "object",
+      "properties": {
+        "cores": { "type": "number" },
+        "maxJobs": { "type": "number" },
+        "keep_going": { "type": "boolean" },
+        "extraArgs": { "type": "string" },
+        "substituters": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "trustedPublicKeys": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "command": { "type": "string" },
+        "cachix": {
+          "type": "object",
+          "properties": {
+            "push": { "type": "boolean" },
+            "target": { "type": "string" },
+            "apiKey": { "type": "string" },
+            "signingKey": { "type": "string" }
+          },
+          "required": ["push"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["command", "cachix"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["git", "buildOptions"],
+  "additionalProperties": true
+}
+

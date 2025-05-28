@@ -2,25 +2,6 @@ import type {Request, Response} from 'express'
 import raw from 'express'
 import createRouter from "express-file-routing"
 
-// Check needed envs
-
-const envs = [
-  "BUILD_DIR"
-]
-
-envs.forEach(env => {
-  if(!process.env[env]){
-    console.error("env BUILD_DIR is missing")
-    process.exit(1)
-  }
-})
-
-if(process.env.BUILD_DIR === "./"){
-  console.error("BUILD_DIR could not be \"./\"")
-  process.exit(1)
-}
-
-
 const app = require('express')()
 
 app.use(raw())
