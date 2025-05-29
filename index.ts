@@ -1,8 +1,9 @@
 import type {Request, Response} from 'express'
 import raw from 'express'
 import createRouter from "express-file-routing"
+import ws from "express-ws"
 
-const app = require('express')()
+const { app } = ws(require('express')())
 
 app.use(raw())
 
