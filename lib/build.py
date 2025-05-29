@@ -10,7 +10,7 @@ from git import Repo
 
 parser = argparse.ArgumentParser(description="Build a flake and publish it to an iglu-cache")
 # Default params
-parser.add_argument("--dir", type=str, default="./repo", help="The directory in witch the repo should be cloned into")
+parser.add_argument("--dir", type=str, default="/tmp/iglu-builder/repo", help="The directory in witch the repo should be cloned into")
 
 # Git params
 parser.add_argument("--no-clone", action="store_true", help="Don't clone any repository")
@@ -172,11 +172,12 @@ def main():
     if(args.json != None):
         parse_json()
 
+    if(not args.no_clone):
+        clone()
+    
     if(not args.no_push):
         prepare_cachix()
 
-    if(not args.no_clone):
-        clone()
     build()
     push()
 

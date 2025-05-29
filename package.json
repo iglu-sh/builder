@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "module": "index.ts",
   "scripts": {
-    "dev": "bun run --hot ./index.ts"
+    "dev": "bun run --hot ./index.ts",
+    "prod": "bun run ./index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
