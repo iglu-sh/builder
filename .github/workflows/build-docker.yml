@@ -35,14 +35,14 @@ jobs:
           echo "Building docker for $system!"
           nix build .#packages.$system.iglu-builder-docker
           sudo docker load < result
-          version=$(docker images | grep iglu-builder-docker | head -n1 | awk '{print $2}' | cut -d- -f1)
+          version=$(docker images | grep iglu-builder | head -n1 | awk '{print $2}' | cut -d- -f1)
         done
 
         echo
         echo
         echo "Pushing docker to ghcr.io!"
-        docker tag iglu-builder-docker:$version-arm64 ghcr.io/iglu-sh/iglu-builder:$version-arm64 
-        docker tag iglu-builder-docker:$version-amd64 ghcr.io/iglu-sh/iglu-builder:$version-amd64 
+        docker tag iglu-builder:$version-arm64 ghcr.io/iglu-sh/iglu-builder:$version-arm64 
+        docker tag iglu-builder:$version-amd64 ghcr.io/iglu-sh/iglu-builder:$version-amd64 
         docker push ghcr.io/iglu-sh/iglu-builder:$version-arm64 
         docker push ghcr.io/iglu-sh/iglu-builder:$version-amd64 
 
