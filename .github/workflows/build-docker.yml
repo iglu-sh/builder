@@ -41,8 +41,8 @@ jobs:
         echo
         echo
         echo "Pushing docker to ghcr.io!"
-        docker tag iglu-builder-docker:$version-arm64 ghcr.io/iglu-sh/iglu-builder:$version-arm64 
-        docker tag iglu-builder-docker:$version-amd64 ghcr.io/iglu-sh/iglu-builder:$version-amd64 
+        docker tag iglu-builder:$version-arm64 ghcr.io/iglu-sh/iglu-builder:$version-arm64 
+        docker tag iglu-builder:$version-amd64 ghcr.io/iglu-sh/iglu-builder:$version-amd64 
         docker push ghcr.io/iglu-sh/iglu-builder:$version-arm64 
         docker push ghcr.io/iglu-sh/iglu-builder:$version-amd64 
 
