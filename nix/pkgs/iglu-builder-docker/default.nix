@@ -8,7 +8,7 @@ let
   archType = if (stdenv.hostPlatform.system == "x86_64-linux") then "amd64" else "arm64";
 in
 dockerTools.buildImage {
-  name = "iglu-builder-docker";
+  name = "iglu-builder";
   tag = "v${iglu.iglu-builder.version}-${archType}";
 
   copyToRoot = [
