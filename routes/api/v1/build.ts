@@ -1,7 +1,6 @@
 import bodyParser, {type Request, type Response} from 'express'
 import { Validator } from 'jsonschema'
 import type ExpressWs from 'express-ws'
-import fs from 'node:fs'
 
 let validator = new Validator();
 const bodySchema = require("../../../schemas/bodySchema.json");
