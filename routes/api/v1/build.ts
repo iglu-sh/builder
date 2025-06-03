@@ -44,7 +44,6 @@ export const post = [
 export const ws = async (ws:ExpressWs, req:object) => {
   async function start_build(job:Object){
     ws.send("Start building...")
-    console.log(Bun.main.split("/").slice(0, -1))
     const child = Bun.spawn([Bun.main.split("/").slice(0, -1)?.join("/") + "/lib/build.py", "--json", JSON.stringify(job)])
 
     for await (const chunk of child.stdout) {
