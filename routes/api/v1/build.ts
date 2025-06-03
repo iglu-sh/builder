@@ -1,5 +1,5 @@
 import bodyParser, {type Request, type Response} from 'express'
-import { Validator } from 'jsonschema';
+import { Validator } from 'jsonschema'
 import type ExpressWs from 'express-ws'
 
 let validator = new Validator();
@@ -21,9 +21,7 @@ export const post = [
       })
     }
 
-    const child = Bun.spawn(["./build.py", "--json", JSON.stringify(req.body)], {
-      cwd: "./lib"
-    })
+    const child = Bun.spawn([Bun.main.split("/").slice(0, -1)?.join("/") + "/lib/build.py", "--json", JSON.stringify(req.body)])
 
     for await (const chunk of child.stdout) {
       const lines = new TextDecoder().decode(chunk).split("\n")
@@ -44,9 +42,8 @@ export const post = [
 
 export const ws = async (ws:ExpressWs, req:object) => {
   async function start_build(job:Object){
-    const child = Bun.spawn(["./build.py", "--json", JSON.stringify(job)], {
-      cwd: "./lib"
-    })
+    ws.send("Start building...")
+    const child = Bun.spawn([Bun.main.split("/").slice(0, -1)?.join("/") + "/lib/build.py", "--json", JSON.stringify(job)])
 
     for await (const chunk of child.stdout) {
       const lines = new TextDecoder().decode(chunk).split("\n")

@@ -127,7 +127,7 @@ def build():
     # Check if command start with nix or nix-build
     if args.command.split(" ")[0] in ["nix", "nix-build"]:
         child = subprocess.Popen(
-            args.command.split(" "),
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,

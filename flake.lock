@@ -42,16 +42,16 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1748543889,
-        "narHash": "sha256-qZLjS0Rg+DKA+aA6vjY9+KDJwVj7+J0DwPrESybQYyw=",
+        "lastModified": 1748895641,
+        "narHash": "sha256-Wlsb5wH0jYpBhK3X1og5HovNWpZ6G+F7PgPemR3SbHY=",
         "owner": "iglu-api",
         "repo": "flake",
-        "rev": "c43897ab86ce079da3a2f81556749a38c2d3d1ca",
+        "rev": "dc52f8b84110aea5eae65b8e0cdd2a72c885c547",
         "type": "github"
       },
       "original": {
         "owner": "iglu-api",
-        "ref": "c43897ab86ce079da3a2f81556749a38c2d3d1ca",
+        "ref": "dc52f8b84110aea5eae65b8e0cdd2a72c885c547",
         "repo": "flake",
         "type": "github"
       }

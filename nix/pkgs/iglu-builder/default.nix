@@ -1,5 +1,7 @@
 { buildBunApplication
 , python3
+, nix
+, cachix
 }:
 
 let
@@ -13,7 +15,15 @@ buildBunApplication {
 
   nodeModuleHash = "sha256-NKCUv7XRhEtGvUJrqEw24ugqaR0CTNH0bRS+R9ZDciA=";
 
+  buildInputs = [
+    pythonEnv
+  ];
+
   bunScript = "prod";
+
+  buildPhase = ''
+    patchShebangs lib
+  '';
 
   filesToInstall = [
     "index.ts"
@@ -23,6 +33,7 @@ buildBunApplication {
   ];
 
   extraBinPaths = [
-    pythonEnv
+    nix
+    cachix
   ];
 }

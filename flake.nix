@@ -3,7 +3,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     utils.url = "github:gytis-ivaskevicius/flake-utils-plus?ref=afcb15b845e74ac5e998358709b2b5fe42a948d1";
-    iglu-flake.url = "github:iglu-api/flake?ref=c43897ab86ce079da3a2f81556749a38c2d3d1ca";
+    iglu-flake.url = "github:iglu-api/flake?ref=dc52f8b84110aea5eae65b8e0cdd2a72c885c547";
   };
 
   # deadnix: skip
