@@ -1,6 +1,11 @@
 { dockerTools
 , iglu
 , bash
+, coreutils
+, buildEnv
+, cacert
+, nix
+, cachix
 , stdenv
 }:
 
@@ -11,15 +16,23 @@ dockerTools.buildImage {
   name = "iglu-builder";
   tag = "v${iglu.iglu-builder.version}-${archType}";
 
-  copyToRoot = [
-    iglu.iglu-builder
-    bash
-  ];
+  copyToRoot = buildEnv {
+    name = "image-root";
+    paths = [
+      iglu.iglu-builder
+      bash
+      coreutils
+      nix
+      cachix
+    ];
+    pathsToLink = [ "/bin" "/etc" ];
+  };
 
   config = {
     ExposedPorts = {
       "3000/tcp" = { };
     };
     Cmd = [ "/bin/iglu-builder" ];
+    Env = [ "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt" ];
   };
 }

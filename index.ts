@@ -3,7 +3,9 @@ import raw from 'express'
 import createRouter from "express-file-routing"
 import ws from "express-ws"
 
-const { app } = ws(require('express')())
+const express = require("express")
+const app = express()
+const expressWs = require("express-ws")(app)
 
 app.use(raw())
 
@@ -18,5 +20,4 @@ app.use((req:Request, res:Response) => {
 })
 
 app.listen(3000)
-
 
