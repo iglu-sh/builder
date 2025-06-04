@@ -13,7 +13,7 @@ in
 buildBunApplication {
   src = ../../..;
 
-  nodeModuleHash = "sha256-NKCUv7XRhEtGvUJrqEw24ugqaR0CTNH0bRS+R9ZDciA=";
+  nodeModuleHash = "sha256-PVa0hUP2djLIFPqu05f5VDgLr8QExlItNS+4H5LEhYo=";
 
   buildInputs = [
     pythonEnv
