@@ -30,6 +30,8 @@ export const ws = async (ws:ExpressWs, req:object) => {
   function wsSend(wsMessage:wsMessage){
     if(wsMessage.error){
       Logger.error(wsMessage.error)
+    }else if(wsMessage.msg){
+      Logger.debug(wsMessage.msg)
     }
     ws.send(JSON.stringify(wsMessage))
   }
