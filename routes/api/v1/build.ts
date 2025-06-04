@@ -1,84 +1,94 @@
-import bodyParser, {type Request, type Response} from 'express'
 import { Validator } from 'jsonschema'
 import type ExpressWs from 'express-ws'
+import {Logger} from '../../../utils/logger'
 
 let validator = new Validator();
 const bodySchema = require("../../../schemas/bodySchema.json");
 
-export const post = [
-  bodyParser.json(),
-  async (req: Request, res: Response) => {
-    if(req.method !== 'POST'){
-      return res.status(405).send('Method Not Allowed');
-    }
+// Count concurrent ws connections
+let wsCount = 0;
 
-    let validate = validator.validate(req.body, bodySchema)
-
-
-    if(!validate.valid){
-      res.status(400).json({
-        error: "JSON schema is not valid."
-      })
-    }
-
-    const child = Bun.spawn([Bun.main.split("/").slice(0, -1)?.join("/") + "/lib/build.py", "--json", JSON.stringify(req.body)])
-
-    for await (const chunk of child.stdout) {
-      const lines = new TextDecoder().decode(chunk).split("\n")
-      for (const line of lines) {
-        console.log("[STDOUT]:", line)
-      }
-    }
-
-    await child.exited
-
-    if(child.exitCode != 0){
-      return res.status(500).send("Internal Server Error")
-    }
-
-    return res.status(200).send("Build was successfull!")
-  }
-]
+type wsMessage = {
+  msg?: string,
+  jobStatus: "failed" | "success" | "starting" | "running",
+  buildExitCode?: number,
+  error?: string,
+  stdout?: string
+}
 
 export const ws = async (ws:ExpressWs, req:object) => {
+  Logger.logRequest("/api/v1/build", "WS")
+  wsCount++
+
+  if(wsCount > 1){
+    wsSend({error: "A build job is already running.", jobStatus: "running"})
+    wsClose(1011)
+  }
+
+
+  // Send function
+  function wsSend(wsMessage:wsMessage){
+    if(wsMessage.error){
+      Logger.error(wsMessage.error)
+    }
+    ws.send(JSON.stringify(wsMessage))
+  }
+
+  // Close function is needed to reduce connection count if server closes connection
+  function wsClose(statusCode: number){
+    wsCount--
+    ws.close(statusCode)
+  }
+
+
   async function start_build(job:Object){
-    ws.send("Start building...")
+    // start build
+    wsSend({msg: "Start Building", jobStatus: "starting"})
+    Logger.info("Start Build: " + JSON.stringify(job))
     const child = Bun.spawn([Bun.main.split("/").slice(0, -1)?.join("/") + "/lib/build.py", "--json", JSON.stringify(job)])
 
+    // parse output
     for await (const chunk of child.stdout) {
       const lines = new TextDecoder().decode(chunk).split("\n")
       for (const line of lines) {
         if(line !== ""){
-          console.log("[STDOUT]:", line)
-          ws.send("[STDOUT]: " + line)
+          Logger.debug("[STDOUT]: " + line)
+          wsSend({stdout: line, jobStatus: "running"})
         }
       }
     }
 
     await child.exited
 
-    if(child.exitCode != 0){
-      ws.send("Internal Server Error")
-      ws.close()
+    if(child.exitCode == 2){
+      wsSend({error: "Invalid command: '" + job.buildOptions.command + "'", buildExitCode: child.exitCode, jobStatus: "failed"})
+      wsClose(1007)
+    }else if(child.exitCode != 0){
+      wsSend({error: "Something went wrong while building. Builder exited with error code " + child.exitCode, buildExitCode: child.exitCode, jobStatus: "failed"})
+      wsClose(1011)
     }
 
-    ws.send("Build was successfull!")
-    ws.close()
+    wsSend({msg: "Build was successfull", buildExitCode: 0, jobStatus: "success"})
+    wsClose(1000)
   }
-
   ws.on('message', function(msg:string){
     try{
       const job = JSON.parse(msg)
       let validate = validator.validate(job, bodySchema)
       if(!validate.valid){
-        ws.send(JSON.stringify({error: "JSON schema is not valid."}))
-        ws.close()
+        wsSend({error: "JSON schema is not valid.", jobStatus: "failed"})
+        wsClose(1007)
       }else{
         start_build(job)
       }
     }catch(e){
-      ws.send("Not a valid JSON")
-      ws.close()
+      wsSend({error: "Not a valid JSON", jobStatus: "failed"})
+      wsClose(1007)
     }
+  })
+
+  // needed to reduce connection count if client ends the connection
+  ws.on('close', function(){
+    wsCount--
   })
 }

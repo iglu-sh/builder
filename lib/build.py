@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+# exit codes
+# 0: success
+# 1: error
+# 2: command not allowed
+
 import argparse
 import os
 import shutil
@@ -144,7 +150,7 @@ def build():
             exit(1)
     else:
         print("Invalid command! Command must start with \"nix\" or \"nix-build\"")
-        exit(1)
+        exit(2)
 
 def push():
     child = subprocess.Popen(
