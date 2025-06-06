@@ -3,6 +3,7 @@
 , bash
 , coreutils
 , buildEnv
+, tini
 , cacert
 , nix
 , cachix
@@ -24,6 +25,8 @@ dockerTools.buildImage {
       coreutils
       nix
       cachix
+      cacert
+      tini
     ];
     pathsToLink = [ "/bin" "/etc" ];
   };
@@ -32,7 +35,7 @@ dockerTools.buildImage {
     ExposedPorts = {
       "3000/tcp" = { };
     };
-    Cmd = [ "/bin/iglu-builder" ];
-    Env = [ "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt" ];
+    Cmd = [ "/bin/tini" "--" "/bin/iglu-builder" ];
+    Env = [ "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt" ];
   };
 }
