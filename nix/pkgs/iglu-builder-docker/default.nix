@@ -4,7 +4,6 @@
 , coreutils
 , buildEnv
 , tini
-, cacert
 , nix
 , cachix
 , stdenv
@@ -19,16 +18,24 @@ dockerTools.buildImage {
 
   copyToRoot = buildEnv {
     name = "image-root";
-    paths = [
+    paths = with dockerTools; [
       iglu.iglu-builder
       bash
       coreutils
       nix
       cachix
-      cacert
       tini
+      caCertificates
+      (fakeNss.override {
+        extraPasswdLines = [
+          "nixbld:x:3000:3000:Build user:/var/empty:/noshell"
+        ];
+        extraGroupLines = [
+          "nixbld:x:3000:"
+        ];
+      })
     ];
-    pathsToLink = [ "/bin" "/etc" ];
+    pathsToLink = [ "/bin" "/etc" "/var" ];
   };
 
   config = {
@@ -36,6 +43,5 @@ dockerTools.buildImage {
       "3000/tcp" = { };
     };
     Cmd = [ "/bin/tini" "--" "/bin/iglu-builder" ];
-    Env = [ "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt" ];
   };
 }
