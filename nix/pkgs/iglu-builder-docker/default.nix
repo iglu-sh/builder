@@ -4,7 +4,6 @@
 , coreutils
 , buildEnv
 , tini
-, runtimeShell
 , nix
 , cachix
 , stdenv
