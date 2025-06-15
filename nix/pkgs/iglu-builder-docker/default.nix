@@ -28,10 +28,10 @@ dockerTools.buildImage {
       caCertificates
       (fakeNss.override {
         extraPasswdLines = [
-          "nixbld:x:3000:3000:Build user:/var/empty:/noshell"
+          "nixbld:x:30000:30000:Build user:/var/empty:/noshell"
         ];
         extraGroupLines = [
-          "nixbld:x:3000:"
+          "nixbld:x:30000:nixbld"
         ];
       })
     ];
