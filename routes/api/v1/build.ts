@@ -33,7 +33,7 @@ export const ws = async (ws:ExpressWs, req:object) => {
     }else if(wsMessage.msg){
       Logger.debug(wsMessage.msg)
     }
-    ws.send(JSON.stringify(wsMessage))
+    ws.send(JSON.stringify({...wsMessage, ...{timestamp: Date.now() as number}}))
   }
 
   // Close function is needed to reduce connection count if server closes connection
