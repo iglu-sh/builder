@@ -1,6 +1,6 @@
 import { Validator } from 'jsonschema'
 import type ExpressWs from 'express-ws'
-import {Logger} from '../../../utils/logger'
+import Logger from '@iglu-sh/logger'
 
 let validator = new Validator();
 const bodySchema = require("../../../schemas/bodySchema.json");
