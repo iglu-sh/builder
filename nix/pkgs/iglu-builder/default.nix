@@ -30,7 +30,6 @@ buildBunApplication {
     "routes"
     "lib"
     "schemas"
-    "utils"
   ];
 
   extraBinPaths = [
