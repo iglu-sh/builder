@@ -13,7 +13,7 @@ in
 buildBunApplication {
   src = ../../..;
 
-  nodeModuleHash = "sha256-PVa0hUP2djLIFPqu05f5VDgLr8QExlItNS+4H5LEhYo=";
+  nodeModuleHash = "sha256-ky69xeAORsvjLorHIFi+oL7DGSi/qbzpYELahKCyRZ8=";
 
   buildInputs = [
     pythonEnv
@@ -30,7 +30,6 @@ buildBunApplication {
     "routes"
     "lib"
     "schemas"
-    "utils"
   ];
 
   extraBinPaths = [

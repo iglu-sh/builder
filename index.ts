@@ -1,18 +1,17 @@
 import type {NextFunction, Request, Response} from 'express'
 import raw from 'express'
 import createRouter from "express-file-routing"
-import ws from "express-ws"
-import {Logger} from './utils/logger'
+import Logger from "@iglu-sh/logger";
 
 // Configure Logger
-const log = new Logger()
-log.setJsonLogging(process.env.JSON_LOGGING && process.env.JSON_LOGGING == 'true' ? true : false)
-log.setLogLevel(process.env.LOG_LEVEL ? process.env.LOG_LEVEL : "INFO")
+Logger.setPrefix("builder")
+Logger.setJsonLogging(process.env.JSON_LOGGING && process.env.JSON_LOGGING == 'true' ? true : false)
+Logger.setLogLevel(process.env.LOG_LEVEL ? process.env.LOG_LEVEL : "INFO")
 
 // Create webserver
 const express = require("express")
 const app = express()
-const expressWs = require("express-ws")(app)
+require("express-ws")(app)
 
 app.use(raw())
 
