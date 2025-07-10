@@ -1,4 +1,7 @@
-{ buildPythonPackage, fetchPypi }:
+{ buildPythonPackage
+, fetchPypi
+, setuptools
+}:
 
 buildPythonPackage rec {
   pname = "types_jsonschema";
@@ -9,6 +12,10 @@ buildPythonPackage rec {
     inherit version;
     sha256 = "sha256-qRDklEaBy7GxipP/tQLgmRDbeIMUMS/HY98I2Kwqrbc=";
   };
+
+  pyproject = true;
+
+  build-system = [ setuptools ];
 
   doCheck = false;
 }
