@@ -1,112 +1,144 @@
 #!/usr/bin/env python3
 
-# exit codes
-# 0: success
+# --- exit codes ---
+# 0: sucess
 # 1: error
 # 2: command not allowed
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
-import json
-import collections.abc
 from jinja2 import Environment, FileSystemLoader
 from git import Repo
+from jsonschema import validate
 
-parser = argparse.ArgumentParser(description="Build a flake and publish it to an iglu-cache")
-# Default params
-parser.add_argument("--dir", type=str, default="/tmp/iglu-builder/repo", help="The directory in witch the repo should be cloned into")
+# --- parsing ---
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build a flake and publish it to an iglu-cache")
+    # Default params
+    parser.add_argument("--dir", type=str, default="/tmp/iglu-builder/repo", help="The directory in witch the repo should be cloned into")
 
-# Git params
-parser.add_argument("--no-clone", action="store_true", help="Don't clone any repository")
-parser.add_argument("--repository", type=str, help="The repository to clone")
-parser.add_argument("--branch", type=str, help="The repositorys branch to clone")
-parser.add_argument("--git-user", type=str, help="The username to clone the repositorys")
-parser.add_argument("--git-key", type=str, help="The key to clone the repositorys")
+    # Git params
+    parser.add_argument("--no-clone", action="store_true", help="Don't clone any repository")
+    parser.add_argument("--repository", type=str, help="The repository to clone")
+    parser.add_argument("--branch", type=str, help="The repositorys branch to clone")
+    parser.add_argument("--git-user", type=str, help="The username to clone the repositorys")
+    parser.add_argument("--git-key", type=str, help="The key to clone the repositorys")
 
-# Bild params
-parser.add_argument("--command", type=str, help="The repository to clone")
+    # Bild params
+    parser.add_argument("--command", type=str, help="The repository to clone")
 
-# Cachix params
-parser.add_argument("--no-push", action="store_true", help="Don't push any result")
-parser.add_argument("--target", type=str, help="URL of the cache with cache (https://caches.iglu.sh/default)")
-parser.add_argument("--api-key", type=str, help="Authtoken for the cache")
-parser.add_argument("--signing-key", type=str, help="key witch is used to sign the derivations")
+    # Cachix params
+    parser.add_argument("--no-push", action="store_true", help="Don't push any result")
+    parser.add_argument("--target", type=str, help="URL of the cache with cache (https://caches.iglu.sh/default)")
+    parser.add_argument("--api-key", type=str, help="Authtoken for the cache")
+    parser.add_argument("--signing-key", type=str, help="key witch is used to sign the derivations")
 
-# JSON
-parser.add_argument("--json", type=str, help="Input all settings via JSON")
+    # JSON
+    parser.add_argument("--json", type=str, help="Input all settings via JSON")
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-# Check args
-if args.json is None:
-    if not args.no_clone and args.repository is None:
-        parser.error("--repository is required if --no-clone is not set.")
-    if not args.no_push:
-        if args.target is None:
-            parser.error("--target is required if --no-push is not set.")
-        if args.api_key is None:
-            parser.error("--api-key is required if --no-push is not set.")
-        if args.signing_key is None:
-            parser.error("--signing-key is required if --no-push is not set.")
-    if not args.command is None:
-        parser.error("--command is needed")
+    # Check args
+    if args.json is None:
+        if not args.no_clone and args.repository is None:
+            parser.error("--repository is required if --no-clone is not set.")
+        if not args.no_push:
+            if args.target is None:
+                parser.error("--target is required if --no-push is not set.")
+            if args.api_key is None:
+                parser.error("--api-key is required if --no-push is not set.")
+            if args.signing_key is None:
+                parser.error("--signing-key is required if --no-push is not set.")
+        if not args.command is None:
+            parser.error("--command is needed")
 
-# Check if other args given if json is set
-invalid_args = [k for k, v in vars(args).items() if k not in ["json", "dir"] and v not in (None, False)]
-if args.json and len(invalid_args) > 1:
-    print(invalid_args)
-    parser.error("You can not set more params if --json is set.")
+    # Check if other args given if json is set
+    invalid_args = [k for k, v in vars(args).items() if k not in ["json", "dir"] and v not in (None, False)]
+    if args.json and len(invalid_args) > 1:
+        print(invalid_args)
+        parser.error("You can not set more params if --json is set.")
 
-def update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
+    return args
 
-def parse_json():
-    json_data = json.loads(args.json)
-    json_schema= {
-        "git": {
-            "repository": None,
-            "branch": None,
-            "gitUsername": None,
-            "gitKey": None,
-            "requiresAuth": None,
-            "noClone": None,
-        },
-        "buildOptions": {
-            "cores": None,
-            "maxJobs": None,
-            "keep_going": None,
-            "extraArgs": None,
-            "substituters": None,
-            "trustedPublicKeys": None,
-            "command": None,
-            "cachix": {
-                "push": None,
-                "target": None,
-                "apiKey": None,
-                "signingKey": None
-            }
-        }
-    }
-    json_data = update(json_schema, json_data)
-    args.repository = json_data["git"]["repository"]
-    args.branch = json_data["git"]["branch"]
-    args.git_user = json_data["git"]["gitUsername"]
-    args.git_key = json_data["git"]["gitKey"]
-    args.no_clone = json_data["git"]["noClone"]
-    args.command = json_data["buildOptions"]["command"]
-    args.no_push = not json_data["buildOptions"]["cachix"]["push"]
-    args.api_key = json_data["buildOptions"]["cachix"]["apiKey"]
-    args.signing_key = json_data["buildOptions"]["cachix"]["signingKey"]
-    args.target = json_data["buildOptions"]["cachix"]["target"]
 
-def prepare_cachix():
+def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Namespace:
+    path = os.path.split(os.path.abspath(__file__))[0]
+
+    try:                                   
+        with open(path + '/../schemas/bodySchema.json') as f:
+            jsonSchema = json.load(f)
+    except Exception as e:
+        print(str(e))                               
+        exit(1)
+
+    try:
+        raw = json.loads(json_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+    validate(instance=raw, schema=jsonSchema)
+    
+    # Basic structure validation
+    if "git" not in raw or "buildOptions" not in raw:
+        raise ValueError("JSON must contain 'git' and 'buildOptions' keys")
+
+    if not raw.get("git"):
+        raw.setdefault("git", {})
+    if not raw.get("buildOptions"):
+        raw.setdefault("buildOptions", {})
+    if not raw["buildOptions"].get("cachix"):
+        raw["buildOptions"].setdefault("buildOptions", {})
+
+    args.branch = raw["git"].setdefault("branch", None)
+    args.git_user = raw["git"].setdefault("gitUsername", None)
+    args.git_key = raw["git"].setdefault("gitKey", None)
+    args.no_clone = raw["git"].setdefault("noClone", None)
+    args.command = raw["buildOptions"].setdefault("command", None)
+    args.no_push = not raw["buildOptions"]["cachix"].setdefault("push", True)
+    args.api_key = raw["buildOptions"]["cachix"].setdefault("apiKey", None)
+    args.signing_key = raw["buildOptions"]["cachix"].setdefault("signingKey", None)
+    args.target = raw["buildOptions"]["cachix"].setdefault("target", None)
+
+    return args
+
+# --- Core ---
+def clone(args: argparse.Namespace) -> None:
+    # TODO: Pull if exists insted of removing and recloning
+    # TODO: Add option for auth
+    # TODO: add ssh support
+    if os.path.exists(args.dir):
+        shutil.rmtree(args.dir)
+
+    Repo.clone_from(args.repository, args.dir)
+
+def build(args: argparse.Namespace) -> None:
+    # Check if command start with nix or nix-build
+    if args.command.split(" ")[0] in ["nix", "nix-build"]:
+        child = subprocess.Popen(
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            cwd=args.dir
+        )
+
+        if not child.stdout is None:
+            for line in child.stdout:
+                print(line, end='')
+
+        child.wait()
+
+        if(child.returncode != 0):
+            exit(1)
+    else:
+        print("Invalid command! Command must start with \"nix\" or \"nix-build\"")
+        exit(2)
+
+def prepare_cachix(args: argparse.Namespace) -> None:
     env = Environment(loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__))))
     template = env.get_template("cachix.dhall.j2")
     data = {
@@ -120,39 +152,7 @@ def prepare_cachix():
     with open(args.dir + "/cachix.dhall", "w") as f:
         f.write(cachix_config)
 
-def clone():
-    # TODO: Pull if exists insted of removing and recloning
-    # TODO: Add option for auth
-    # TODO: add ssh support
-    if os.path.exists(args.dir):
-        shutil.rmtree(args.dir)
-
-    Repo.clone_from(args.repository, args.dir)
-
-def build():
-    # Check if command start with nix or nix-build
-    if args.command.split(" ")[0] in ["nix", "nix-build"]:
-        child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            cwd=args.dir
-        )
-
-        for line in child.stdout:
-            print(line, end='')
-
-        child.wait()
-
-        if(child.returncode != 0):
-            exit(1)
-    else:
-        print("Invalid command! Command must start with \"nix\" or \"nix-build\"")
-        exit(2)
-
-def push():
+def push(args: argparse.Namespace) -> None:
     child = subprocess.Popen(
         ["cachix", "-c", "./cachix.dhall", "push", "default", "result"],
         stdout=subprocess.PIPE,
@@ -161,30 +161,33 @@ def push():
         bufsize=1,
         cwd=args.dir
     )
-    for line in child.stdout:
-        print(line, end='')
+
+    if not child.stdout is None:
+        for line in child.stdout:
+            print(line, end='')
 
     child.wait()
 
     if(child.returncode != 0):
         exit(1)
+# --- Main ---
+def main() -> None:
+    args = parse_args()
+    
+    if args.json != None:
+        args = parse_json_config(args, args.json)
 
-def main():
-    # Create Dir if not exists
     if not os.path.exists(args.dir):
         os.makedirs(args.dir)
 
-    # parse json if given
-    if(args.json != None):
-        parse_json()
+    if not args.no_clone:
+        clone(args)
 
-    if(not args.no_clone):
-        clone()
-    
-    if(not args.no_push):
-        prepare_cachix()
+    build(args)
 
-    build()
-    push()
+    if not args.no_push:
+        prepare_cachix(args)
+        push(args)
 
 main()
+
