@@ -1,6 +1,7 @@
 { buildPythonPackage
 , fetchPypi
 , setuptools
+, referencing
 }:
 
 buildPythonPackage rec {
@@ -16,6 +17,8 @@ buildPythonPackage rec {
   pyproject = true;
 
   build-system = [ setuptools ];
+
+  propagatedBuildInputs = [ referencing ];
 
   doCheck = false;
 }

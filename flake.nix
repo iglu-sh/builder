@@ -41,6 +41,7 @@
                     jsonschema
                     mypy
                     types-jsonschema
+                    referencing
                   ]))
               ];
               shellHook = ''

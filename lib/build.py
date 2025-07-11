@@ -106,13 +106,35 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
 
 # --- Core ---
 def clone(args: argparse.Namespace) -> None:
-    # TODO: Pull if exists insted of removing and recloning
-    # TODO: Add option for auth
-    # TODO: add ssh support
-    if os.path.exists(args.dir):
-        shutil.rmtree(args.dir)
+    # Set Repo url
+    if not args.git_user is None and not args.git_key is None:
+        repo = args.repository.replace("://", "://" + args.git_user + ":" + args.git_key + "@")
+    else:
+        repo = args.repository
 
-    Repo.clone_from(args.repository, args.dir)
+    print("Checking if the repository is pulled already...")
+    pulled = False
+    # Check if repo direcotry already exists
+    if os.path.exists(args.dir):
+        remote_url= list(Repo(args.dir).remotes["origin"].urls)[0]
+
+        # Pull Repo if remote is correct and delete it if not
+        if remote_url == repo:
+            print("Repository found! Pulling it...")
+            Repo(args.dir).remotes['origin'].pull()
+            pulled = True
+        else:
+            shutil.rmtree(args.dir)
+
+    # Clone Repo if not pulled
+    if not pulled:
+        print("Repository not found! Cloning it...")
+        print("Cloning repo: " + repo + "...")
+        try:
+            Repo.clone_from(repo, args.dir)
+        except Exception as e:
+            print(e)
+            exit(1)
 
 def build(args: argparse.Namespace) -> None:
     # Check if command start with nix or nix-build
@@ -189,5 +211,8 @@ def main() -> None:
         prepare_cachix(args)
         push(args)
 
-main()
+#main()
+
+args = parse_args()
+clone(args)
 
