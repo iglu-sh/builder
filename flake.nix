@@ -34,15 +34,7 @@
                 cachix
                 bun
                 iglu.flakecheck
-                (python3.withPackages (ps:
-                  with ps; [
-                    gitpython
-                    jinja2
-                    jsonschema
-                    mypy
-                    types-jsonschema
-                    referencing
-                  ]))
+                iglu.dev-python
               ];
               shellHook = ''
                 exec zsh
@@ -52,6 +44,7 @@
           packages = {
             inherit (nixpkgs.iglu) iglu-builder;
             inherit (nixpkgs.iglu) iglu-builder-docker;
+            inherit (nixpkgs.iglu) dev-python;
           };
         };
     };

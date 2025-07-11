@@ -1,7 +1,8 @@
-_: prev: rec {
+final: prev: rec {
   iglu = prev.iglu // {
     iglu-builder = prev.callPackage ./iglu-builder { };
     iglu-builder-docker = prev.callPackage ./iglu-builder-docker { };
+    dev-python = final.callPackage ./dev-python { };
   };
 
   python3Packages = prev.python3Packages.overrideScope
