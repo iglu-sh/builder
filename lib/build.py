@@ -211,8 +211,5 @@ def main() -> None:
         prepare_cachix(args)
         push(args)
 
-#main()
-
-args = parse_args()
-clone(args)
+main()
 
