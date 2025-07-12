@@ -15,4 +15,6 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: "Check nix stuff"
         run: nix shell github:iglu-sh/flake#flakecheck --command flakecheck
+      - name: "Check python typing"
+        run: nix shell .#dev-python --command mypy ./lib/*.py
 
