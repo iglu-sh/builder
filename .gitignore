@@ -38,3 +38,4 @@ repo
 test
 cachix.dhll
 result
+.cachix.dhll
