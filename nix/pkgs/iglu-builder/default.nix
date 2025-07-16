@@ -1,12 +1,11 @@
-{ buildBunApplication, python3, nix, cachix }:
+{ buildBunApplication, nix, cachix, iglu}:
 
-let pythonEnv = python3.withPackages (ps: with ps; [ jinja2 gitpython ]);
-in buildBunApplication {
+buildBunApplication {
   src = ../../..;
 
   nodeModuleHash = "sha256-ky69xeAORsvjLorHIFi+oL7DGSi/qbzpYELahKCyRZ8=";
 
-  buildInputs = [ pythonEnv ];
+  buildInputs = [ iglu.dev-python ];
 
   bunScript = "prod";
 
