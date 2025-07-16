@@ -1,4 +1,4 @@
-{ buildBunApplication, nix, cachix, iglu}:
+{ buildBunApplication, nix, cachix, iglu }:
 
 buildBunApplication {
   src = ../../..;
