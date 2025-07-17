@@ -68,10 +68,10 @@ export const ws = async (ws:ExpressWs, req:object) => {
     }else if(child.exitCode != 0){
       wsSend({error: "Something went wrong while building. Builder exited with error code " + child.exitCode, buildExitCode: child.exitCode, jobStatus: "failed"})
       wsClose(1011)
+    }else{
+      wsSend({msg: "Build was successfull", buildExitCode: 0, jobStatus: "success"})
+      wsClose(1000)
     }
-
-    wsSend({msg: "Build was successfull", buildExitCode: 0, jobStatus: "success"})
-    wsClose(1000)
   }
   ws.on('message', function(msg:string){
     try{

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 rm ./.cachix.dhll
 docker stop --all
+mkdir ./store
 
 docker pull ghcr.io/iglu-sh/iglu-cache:latest postgres:17
 nix build .#iglu-builder-docker
@@ -24,6 +25,7 @@ BUILDER_CONTAINER=$(docker run --rm -d \
   --network=iglu_test \
   --hostname tst-builder \
   --name tst-builder \
+  -v ./store:/tmp/nix \
   -p 3000:3000 \
   $BUILDER_IMAGE)
 
