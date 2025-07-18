@@ -36,6 +36,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key", type=str, help="Authtoken for the cache")
     parser.add_argument("--signing-key", type=str, help="key witch is used to sign the derivations")
 
+    # Substituter params
+    parser.add_argument("--substituter", action="append", type=str, help="A substituter which is used during the build process")
+    parser.add_argument("--trusted-key", action="append", type=str, help="A trusted public key of a substituter")
+
     # JSON
     parser.add_argument("--json", type=str, help="Input all settings via JSON")
 
@@ -52,8 +56,13 @@ def parse_args() -> argparse.Namespace:
                 parser.error("--api-key is required if --no-push is not set.")
             if args.signing_key is None:
                 parser.error("--signing-key is required if --no-push is not set.")
-        if not args.command is None:
+        if args.command is None:
             parser.error("--command is needed")
+        if (args.substituter is None) != (args.trusted_key is None):
+            parser.error("--substituter and --trusted-key have to be set or unset together")
+        elif len(args.substituter) != len(args.trusted_key):
+            parser.error("--substituter and --trusted_key must set equaly often")
+
 
     # Check if other args given if json is set
     invalid_args = [k for k, v in vars(args).items() if k not in ["json", "dir"] and v not in (None, False)]
@@ -101,6 +110,8 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
     args.api_key = raw["buildOptions"]["cachix"].setdefault("apiKey", None)
     args.signing_key = raw["buildOptions"]["cachix"].setdefault("signingKey", None)
     args.target = raw["buildOptions"]["cachix"].setdefault("target", None)
+    args.substituter = raw["buildOptions"].setdefault("substituters", None)
+    args.trusted_key = raw["buildOptions"].setdefault("trustedPublicKeys", None)
 
     return args
 
@@ -139,8 +150,21 @@ def clone(args: argparse.Namespace) -> None:
 def build(args: argparse.Namespace) -> None:
     # Check if command start with nix or nix-build
     if args.command.split(" ")[0] in ["nix", "nix-build"]:
+        # Set substituter option
+        substituter_option = []
+        if not args.substituter is None:
+            substituter_option = [
+                "--option",
+                "extra-trusted-public-keys",
+                " ".join(args.substituter),
+                "--option",
+                "extra-substituters",
+                " ".join(args.trusted_key)
+            ]
+        print(args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option)
+        exit(0)
         child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"],
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -212,4 +236,3 @@ def main() -> None:
         push(args)
 
 main()
-
