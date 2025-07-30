@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
         if (args.substituter is None) != (args.trusted_key is None):
             parser.error("--substituter and --trusted-key have to be set or unset together")
         elif len(args.substituter) != len(args.trusted_key):
-            parser.error("--substituter and --trusted_key must set equaly often")
+            parser.error("--substituter and --trusted-key must set equaly often")
 
 
     # Check if other args given if json is set
@@ -156,10 +156,10 @@ def build(args: argparse.Namespace) -> None:
             substituter_option = [
                 "--option",
                 "extra-trusted-public-keys",
-                " ".join(args.substituter),
+                " ".join(args.trusted_key),
                 "--option",
                 "extra-substituters",
-                " ".join(args.trusted_key)
+                " ".join(args.substituter)
             ]
         print(args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option)
         child = subprocess.Popen(
