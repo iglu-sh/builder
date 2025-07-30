@@ -161,9 +161,8 @@ def build(args: argparse.Namespace) -> None:
                 "extra-substituters",
                 " ".join(args.substituter)
             ]
-        print(args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option)
         child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option,
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--store", "/tmp"] + substituter_option,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
