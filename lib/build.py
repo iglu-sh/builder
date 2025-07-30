@@ -162,7 +162,6 @@ def build(args: argparse.Namespace) -> None:
                 " ".join(args.trusted_key)
             ]
         print(args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option)
-        exit(0)
         child = subprocess.Popen(
             args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option,
             stdout=subprocess.PIPE,
