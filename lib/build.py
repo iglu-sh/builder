@@ -18,7 +18,7 @@ from jsonschema import validate
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a flake and publish it to an iglu-cache")
     # Default params
-    parser.add_argument("--dir", type=str, default="/tmp/iglu-builder/repo", help="The directory in witch the repo should be cloned into")
+    parser.add_argument("--dir", type=str, default="/tmp/repos", help="The directory in witch the repo should be cloned into")
 
     # Git params
     parser.add_argument("--no-clone", action="store_true", help="Don't clone any repository")
@@ -123,7 +123,7 @@ def clone(args: argparse.Namespace) -> None:
     else:
         repo = args.repository
 
-    print("Checking if the repository is pulled already...")
+    print("Checking if the repository is already pulled ...")
     pulled = False
     # Check if repo direcotry already exists
     if os.path.exists(args.dir):
