@@ -26,6 +26,7 @@ BUILDER_CONTAINER=$(docker run --rm -d \
   --hostname tst-builder \
   --name tst-builder \
   -v ./store:/tmp/nix \
+  -v ./repos:/tmp/repos \
   -p 3000:3000 \
   $BUILDER_IMAGE)
 

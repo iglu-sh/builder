@@ -18,7 +18,7 @@ from jsonschema import validate
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build a flake and publish it to an iglu-cache")
     # Default params
-    parser.add_argument("--dir", type=str, default="/tmp/iglu-builder/repo", help="The directory in witch the repo should be cloned into")
+    parser.add_argument("--dir", type=str, default="/tmp/repos", help="The directory in witch the repo should be cloned into")
 
     # Git params
     parser.add_argument("--no-clone", action="store_true", help="Don't clone any repository")
@@ -60,8 +60,8 @@ def parse_args() -> argparse.Namespace:
             parser.error("--command is needed")
         if (args.substituter is None) != (args.trusted_key is None):
             parser.error("--substituter and --trusted-key have to be set or unset together")
-        elif len(args.substituter) != len(args.trusted_key):
-            parser.error("--substituter and --trusted_key must set equaly often")
+        elif not args.substituter is None and not args.trusted_key is None and len(args.substituter) != len(args.trusted_key):
+            parser.error("--substituter and --trusted-key must set equaly often")
 
 
     # Check if other args given if json is set
@@ -123,7 +123,7 @@ def clone(args: argparse.Namespace) -> None:
     else:
         repo = args.repository
 
-    print("Checking if the repository is pulled already...")
+    print("Checking if the repository is already pulled ...")
     pulled = False
     # Check if repo direcotry already exists
     if os.path.exists(args.dir):
@@ -156,14 +156,13 @@ def build(args: argparse.Namespace) -> None:
             substituter_option = [
                 "--option",
                 "extra-trusted-public-keys",
-                " ".join(args.substituter),
+                " ".join(args.trusted_key),
                 "--option",
                 "extra-substituters",
-                " ".join(args.trusted_key)
+                " ".join(args.substituter)
             ]
-        print(args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option)
         child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--eval-store", "/tmp"] + substituter_option,
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--store", "/tmp"] + substituter_option,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
