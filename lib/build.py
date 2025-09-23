@@ -60,7 +60,7 @@ def parse_args() -> argparse.Namespace:
             parser.error("--command is needed")
         if (args.substituter is None) != (args.trusted_key is None):
             parser.error("--substituter and --trusted-key have to be set or unset together")
-        elif len(args.substituter) != len(args.trusted_key):
+        elif not args.substituter is None and not args.trusted_key is None and len(args.substituter) != len(args.trusted_key):
             parser.error("--substituter and --trusted-key must set equaly often")
 
 
