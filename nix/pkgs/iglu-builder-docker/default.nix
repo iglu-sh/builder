@@ -1,14 +1,12 @@
 { dockerTools
 , iglu
 , bash
-, coreutils
 , buildEnv
 , tini
 , nix
 , cachix
 , stdenv
 , toybox
-, runtimeShell
 }:
 
 let

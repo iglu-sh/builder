@@ -165,7 +165,7 @@ def build(args: argparse.Namespace) -> None:
             ]
         stdout.write(f"Start building...\n")
         child = Popen(
-                args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"] + substituter_option,
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"] + substituter_option,
             stdout=PIPE,
             stderr=STDOUT,
             text=True,
