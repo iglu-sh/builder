@@ -8,7 +8,7 @@ The builder compoment of the Iglu project. It's a simple nix builder that can be
 Normally you don't have to setup the builder manually. The [Iglu Controller](https://github.com/iglu-sh/controller) spins up new builder each time it starts a job. If you want to spin up a builder manually anyway then you can use:
 
 ```bash
-docker run --rm -v ./store:/tmp/nix ghcr.io/iglu-sh/iglu-builder:latest
+docker run --rm -v ./repos:/tmp/repos -p 3000:3000 ghcr.io/iglu-sh/iglu-builder:latest
 ```
 
 ## Documentation
