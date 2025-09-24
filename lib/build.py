@@ -10,9 +10,11 @@ import json
 import os
 import shutil
 import subprocess
+from subprocess import Popen
 from jinja2 import Environment, FileSystemLoader
 from git import Repo
 from jsonschema import validate
+from time import sleep
 
 # --- parsing ---
 def parse_args() -> argparse.Namespace:
@@ -139,8 +141,8 @@ def clone(args: argparse.Namespace) -> None:
 
     # Clone Repo if not pulled
     if not pulled:
-        print("Repository not found! Cloning it...")
-        print("Cloning repo: " + repo + "...")
+        print(f"Repository not found! Cloning it...")
+        print(f"Cloning repo: {repo}...")
         try:
             Repo.clone_from(repo, args.dir)
         except Exception as e:
@@ -161,8 +163,9 @@ def build(args: argparse.Namespace) -> None:
                 "extra-substituters",
                 " ".join(args.substituter)
             ]
+        print(f"Start building...")
         child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--store", "/tmp"] + substituter_option,
+                args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"] + substituter_option,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -172,12 +175,13 @@ def build(args: argparse.Namespace) -> None:
 
         if not child.stdout is None:
             for line in child.stdout:
-                print(line, end='')
+                print(line, end="") 
 
         child.wait()
 
         if(child.returncode != 0):
             exit(1)
+        print(f"Build finished!")
     else:
         print("Invalid command! Command must start with \"nix\" or \"nix-build\"")
         exit(2)
@@ -196,24 +200,19 @@ def prepare_cachix(args: argparse.Namespace) -> None:
     with open(args.dir + "/cachix.dhall", "w") as f:
         f.write(cachix_config)
 
-def push(args: argparse.Namespace) -> None:
-    child = subprocess.Popen(
-        ["cachix", "-c", "./cachix.dhall", "push", "default", "result"],
+def start_watcher(args: argparse.Namespace) -> Popen[str]:
+    print(f"Start cachix watcher...")
+    watcher =  subprocess.Popen(
+        ["cachix", "-c", "./cachix.dhall", "watch-store", "default"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
         cwd=args.dir
     )
+    os.set_blocking(watcher.stdout.fileno(), False)
+    return watcher
 
-    if not child.stdout is None:
-        for line in child.stdout:
-            print(line, end='')
-
-    child.wait()
-
-    if(child.returncode != 0):
-        exit(1)
 # --- Main ---
 def main() -> None:
     args = parse_args()
@@ -227,10 +226,19 @@ def main() -> None:
     if not args.no_clone:
         clone(args)
 
-    build(args)
-
     if not args.no_push:
         prepare_cachix(args)
-        push(args)
+        watcher = start_watcher(args)
+        build(args)
+
+        lastline = "xyz"
+        while watcher.returncode == None and watcher.stdout.readline() != lastline:
+            lastline = watcher.stdout.readline()
+            sleep(15)
+
+        if(watcher.returncode != 0):
+            exit(1)
+    else:
+        build(args)
 
 main()
