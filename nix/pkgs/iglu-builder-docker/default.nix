@@ -1,4 +1,13 @@
-{ dockerTools, iglu, bash, coreutils, buildEnv, tini, nix, cachix, stdenv }:
+{ dockerTools
+, iglu
+, bash
+, buildEnv
+, tini
+, nix
+, cachix
+, stdenv
+, toybox
+}:
 
 let
   archType =
@@ -13,7 +22,7 @@ dockerTools.buildImage {
     paths = with dockerTools; [
       iglu.iglu-builder
       bash
-      coreutils
+      toybox
       nix
       cachix
       tini
@@ -28,6 +37,9 @@ dockerTools.buildImage {
   };
 
   config = {
+    Env = [
+      "NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/tags/25.05.tar.gz"
+    ];
     ExposedPorts = { "3000/tcp" = { }; };
     Cmd = [ "/bin/tini" "--" "/bin/iglu-builder" ];
   };

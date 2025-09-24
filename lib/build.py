@@ -8,11 +8,13 @@
 import argparse
 import json
 import os
+from sys import stdout, stderr
 import shutil
-import subprocess
+from subprocess import Popen, PIPE, STDOUT
 from jinja2 import Environment, FileSystemLoader
 from git import Repo
 from jsonschema import validate
+from time import sleep
 
 # --- parsing ---
 def parse_args() -> argparse.Namespace:
@@ -67,7 +69,7 @@ def parse_args() -> argparse.Namespace:
     # Check if other args given if json is set
     invalid_args = [k for k, v in vars(args).items() if k not in ["json", "dir"] and v not in (None, False)]
     if args.json and len(invalid_args) > 1:
-        print(invalid_args)
+        stderr.write(str(invalid_args))
         parser.error("You can not set more params if --json is set.")
 
     return args
@@ -80,7 +82,7 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
         with open(path + '/../schemas/bodySchema.json') as f:
             jsonSchema = json.load(f)
     except Exception as e:
-        print(str(e))                               
+        stderr.write(str(e))                               
         exit(1)
 
     try:
@@ -123,7 +125,7 @@ def clone(args: argparse.Namespace) -> None:
     else:
         repo = args.repository
 
-    print("Checking if the repository is already pulled ...")
+    stdout.write("Checking if the repository is already pulled ...\n")
     pulled = False
     # Check if repo direcotry already exists
     if os.path.exists(args.dir):
@@ -131,7 +133,7 @@ def clone(args: argparse.Namespace) -> None:
 
         # Pull Repo if remote is correct and delete it if not
         if remote_url == repo:
-            print("Repository found! Pulling it...")
+            stdout.write("Repository found! Pulling it...\n")
             Repo(args.dir).remotes['origin'].pull()
             pulled = True
         else:
@@ -139,12 +141,12 @@ def clone(args: argparse.Namespace) -> None:
 
     # Clone Repo if not pulled
     if not pulled:
-        print("Repository not found! Cloning it...")
-        print("Cloning repo: " + repo + "...")
+        stdout.write(f"Repository not found! Cloning it...\n")
+        stdout.write(f"Cloning repo: {repo}...\n")
         try:
             Repo.clone_from(repo, args.dir)
         except Exception as e:
-            print(e)
+            stderr.write(str(e))
             exit(1)
 
 def build(args: argparse.Namespace) -> None:
@@ -161,10 +163,11 @@ def build(args: argparse.Namespace) -> None:
                 "extra-substituters",
                 " ".join(args.substituter)
             ]
-        child = subprocess.Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes", "--store", "/tmp"] + substituter_option,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        stdout.write(f"Start building...\n")
+        child = Popen(
+            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"] + substituter_option,
+            stdout=PIPE,
+            stderr=STDOUT,
             text=True,
             bufsize=1,
             cwd=args.dir
@@ -172,14 +175,15 @@ def build(args: argparse.Namespace) -> None:
 
         if not child.stdout is None:
             for line in child.stdout:
-                print(line, end='')
+                stdout.write(line) 
 
         child.wait()
 
         if(child.returncode != 0):
             exit(1)
+        stdout.write(f"Build finished!\n")
     else:
-        print("Invalid command! Command must start with \"nix\" or \"nix-build\"")
+        stderr.write("Invalid command! Command must start with \"nix\" or \"nix-build\"\n")
         exit(2)
 
 def prepare_cachix(args: argparse.Namespace) -> None:
@@ -196,24 +200,22 @@ def prepare_cachix(args: argparse.Namespace) -> None:
     with open(args.dir + "/cachix.dhall", "w") as f:
         f.write(cachix_config)
 
-def push(args: argparse.Namespace) -> None:
-    child = subprocess.Popen(
-        ["cachix", "-c", "./cachix.dhall", "push", "default", "result"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+def start_watcher(args: argparse.Namespace) -> Popen[str]:
+    stdout.write(f"Start cachix watcher...\n")
+    watcher = Popen(
+        ["cachix", "-c", "./cachix.dhall", "watch-store", "default"],
+        stdout=PIPE,
+        stderr=STDOUT,
         text=True,
         bufsize=1,
         cwd=args.dir
     )
+    if not watcher.stdout is None:
+        os.set_blocking(watcher.stdout.fileno(), False)
+        for line in watcher.stdout:
+            stdout.write(line) 
+    return watcher
 
-    if not child.stdout is None:
-        for line in child.stdout:
-            print(line, end='')
-
-    child.wait()
-
-    if(child.returncode != 0):
-        exit(1)
 # --- Main ---
 def main() -> None:
     args = parse_args()
@@ -227,10 +229,32 @@ def main() -> None:
     if not args.no_clone:
         clone(args)
 
-    build(args)
-
     if not args.no_push:
         prepare_cachix(args)
-        push(args)
+        watcher = start_watcher(args)
+        build(args)
+
+        lastline = "xyz"
+        if watcher.stdout != None:
+            while watcher.returncode == None and watcher.stdout.readline() != lastline:
+                lastline = watcher.stdout.readline()
+                stdout.write("Waiting for cachix to finish pushing")
+                stdout.flush()
+                counter = 0
+                while counter < 7:
+                    stdout.write(".")
+                    stdout.flush()
+                    sleep(2)
+                    counter = counter + 1
+                stdout.write("\n")
+                stdout.flush()
+
+        if watcher.returncode != None and watcher.returncode != 0:
+            exit(1)
+        elif watcher.returncode == None:
+            watcher.terminate()
+            exit(0)
+    else:
+        build(args)
 
 main()
