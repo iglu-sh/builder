@@ -3,7 +3,7 @@
 buildBunApplication {
   src = ../../..;
 
-  nodeModuleHash = "sha256-ky69xeAORsvjLorHIFi+oL7DGSi/qbzpYELahKCyRZ8=";
+  nodeModuleHash = "sha256-j9H6GHQl2K2hI99siY8Ya+qxnLjdfIRYsGeKCKXvZ/I=";
 
   buildInputs = [ iglu.dev-python ];
 

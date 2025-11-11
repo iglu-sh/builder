@@ -101,9 +101,9 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
     raw.setdefault("cachix_config", {})
 
     args.branch = raw["git_config"].setdefault("branch", None)
-    args.git_user = raw["git_config"].setdefault("gitUsername", None)
-    args.git_key = raw["git_config"].setdefault("gitKey", None)
-    args.no_clone = raw["git_config"].setdefault("noClone", None)
+    args.git_user = raw["git_config"].setdefault("gitusername", None)
+    args.git_key = raw["git_config"].setdefault("gitkey", None)
+    args.no_clone = raw["git_config"].setdefault("noclone", None)
     args.command = raw["build_options"].setdefault("command", None)
     args.no_push = not raw["cachix_config"].setdefault("push", True)
     args.api_key = raw["cachix_config"].setdefault("apikey", None)
