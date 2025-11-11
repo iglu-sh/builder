@@ -14,7 +14,7 @@
         "requiresauth": { "type": "boolean" },
         "noclone": { "type": "boolean" }
       },
-      "required": ["noClone"],
+      "required": ["noclone"],
       "additionalProperties": false
     },
     "builder" : {
@@ -28,7 +28,7 @@
         "trigger": {"type": "string"},
         "cron": {"type": "string"},
         "arch": {"type": "string"},
-        "webhookurl": {"type": "number"}
+        "webhookurl": {"type": "string"}
       },
       "additionalProperties": false
     },
@@ -74,5 +74,5 @@
     }
   },
   "required": ["git_config", "build_options", "cachix_config"],
-  "additionalProperties": false
+  "additionalProperties": true 
 }
