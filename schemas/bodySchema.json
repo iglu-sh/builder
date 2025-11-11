@@ -9,10 +9,10 @@
         "builder_id": { "type": "number" },
         "id": {"type": "number"},
         "branch": { "type": "string" },
-        "gitUsername": { "type": "string" },
-        "gitKey": { "type": "string" },
-        "requiresAuth": { "type": "boolean" },
-        "noClone": { "type": "boolean" }
+        "gitusername": { "type": "string" },
+        "gitkey": { "type": "string" },
+        "requiresauth": { "type": "boolean" },
+        "noclone": { "type": "boolean" }
       },
       "required": ["noClone"],
       "additionalProperties": false
@@ -51,9 +51,9 @@
         "id": {"type": "number"},
         "builder_id": {"type": "number"},
         "cores": { "type": "number" },
-        "maxJobs": { "type": "number" },
+        "maxjobs": { "type": "number" },
         "keep_going": { "type": "boolean" },
-        "extraArgs": { "type": "string" },
+        "extraargs": { "type": "string" },
         "substituters": {
           "type": "array",
           "items": { 

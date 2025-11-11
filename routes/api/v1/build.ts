@@ -78,6 +78,8 @@ export const ws = async (ws:ExpressWs, req:object) => {
       const job = JSON.parse(msg)
       let validate = validator.validate(job, bodySchema)
       if(!validate.valid){
+        Logger.error("Error validating JSON Schema")
+        Logger.debug(`${validate.errors}`)
         wsSend({error: "JSON schema is not valid.", jobStatus: "failed"})
         wsClose(1007)
       }else{
