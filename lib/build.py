@@ -93,8 +93,8 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
     validate(instance=raw, schema=jsonSchema)
     
     # Basic structure validation
-    if "git" not in raw or "buildOptions" not in raw:
-        raise ValueError("JSON must contain 'git' and 'buildOptions' keys")
+    if "git_config" not in raw or "build_options" not in raw or "cachix_config" not in raw:
+        raise ValueError("JSON must contain 'git_config', 'cachix_config' and 'build_options' keys")
 
     raw.setdefault("git_config", {})
     raw.setdefault("build_options", {"substituters": []})

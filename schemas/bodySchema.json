@@ -73,6 +73,6 @@
       "additionalProperties": false
     }
   },
-  "required": ["git_config", "build_options", "builder", "cachix_config"],
+  "required": ["git_config", "build_options", "cachix_config"],
   "additionalProperties": false
 }
