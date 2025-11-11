@@ -96,24 +96,36 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
     if "git" not in raw or "buildOptions" not in raw:
         raise ValueError("JSON must contain 'git' and 'buildOptions' keys")
 
-    if not raw.get("git"):
-        raw.setdefault("git", {})
-    if not raw.get("buildOptions"):
-        raw.setdefault("buildOptions", {})
-    if not raw["buildOptions"].get("cachix"):
-        raw["buildOptions"].setdefault("buildOptions", {})
+    raw.setdefault("git_config", {})
+    raw.setdefault("build_options", {"substituters": []})
+    raw.setdefault("cachix_config", {})
 
-    args.branch = raw["git"].setdefault("branch", None)
-    args.git_user = raw["git"].setdefault("gitUsername", None)
-    args.git_key = raw["git"].setdefault("gitKey", None)
-    args.no_clone = raw["git"].setdefault("noClone", None)
-    args.command = raw["buildOptions"].setdefault("command", None)
-    args.no_push = not raw["buildOptions"]["cachix"].setdefault("push", True)
-    args.api_key = raw["buildOptions"]["cachix"].setdefault("apiKey", None)
-    args.signing_key = raw["buildOptions"]["cachix"].setdefault("signingKey", None)
-    args.target = raw["buildOptions"]["cachix"].setdefault("target", None)
-    args.substituter = raw["buildOptions"].setdefault("substituters", None)
-    args.trusted_key = raw["buildOptions"].setdefault("trustedPublicKeys", None)
+    args.branch = raw["git_config"].setdefault("branch", None)
+    args.git_user = raw["git_config"].setdefault("gitUsername", None)
+    args.git_key = raw["git_config"].setdefault("gitKey", None)
+    args.no_clone = raw["git_config"].setdefault("noClone", None)
+    args.command = raw["build_options"].setdefault("command", None)
+    args.no_push = not raw["cachix_config"].setdefault("push", True)
+    args.api_key = raw["cachix_config"].setdefault("apikey", None)
+    args.signing_key = raw["cachix_config"].setdefault("signingkey", None)
+    args.target = raw["cachix_config"].setdefault("target", None)
+
+    if len(raw["build_options"]["substituters"]) > 0:
+        substituters = []
+        trusted_keys = []
+
+        for sub in raw["build_options"]["substituters"]:
+            substituters.append(sub["url"])
+
+            for key in sub["public_signing_keys"]:
+                trusted_keys.append(key)
+
+        args.substituter = substituters
+        args.trusted_key = trusted_keys
+    else:
+        args.substituter = None 
+        args.trusted_key = None 
+
 
     return args
 
