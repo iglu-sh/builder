@@ -109,6 +109,7 @@ def parse_json_config(args: argparse.Namespace, json_str: str) -> argparse.Names
     args.api_key = raw["cachix_config"].setdefault("apikey", None)
     args.signing_key = raw["cachix_config"].setdefault("signingkey", None)
     args.target = raw["cachix_config"].setdefault("target", None)
+    args.repository = raw["git_config"].setdefault("repository", None)
 
     if len(raw["build_options"]["substituters"]) > 0:
         substituters = []
