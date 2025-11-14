@@ -15,6 +15,8 @@ from jinja2 import Environment, FileSystemLoader
 from git import Repo
 from jsonschema import validate
 from time import sleep
+from helper import is_git_repo
+from pathlib import Path
 
 # --- parsing ---
 def parse_args() -> argparse.Namespace:
@@ -71,6 +73,9 @@ def parse_args() -> argparse.Namespace:
     if args.json and len(invalid_args) > 1:
         stderr.write(str(invalid_args))
         parser.error("You can not set more params if --json is set.")
+
+    # Parse args to right type
+    args.dir = Path(args.dir)
 
     return args
 
@@ -141,7 +146,8 @@ def clone(args: argparse.Namespace) -> None:
     stdout.write("Checking if the repository is already pulled ...\n")
     pulled = False
     # Check if repo direcotry already exists
-    if os.path.exists(args.dir):
+    print(args.dir)
+    if os.path.exists(args.dir) and is_git_repo(args.dir):
         remote_url= list(Repo(args.dir).remotes["origin"].urls)[0]
 
         # Pull Repo if remote is correct and delete it if not
@@ -151,6 +157,8 @@ def clone(args: argparse.Namespace) -> None:
             pulled = True
         else:
             shutil.rmtree(args.dir)
+    else:
+        shutil.rmtree(args.dir)
 
     # Clone Repo if not pulled
     if not pulled:
