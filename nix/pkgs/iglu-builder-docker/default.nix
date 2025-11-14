@@ -14,16 +14,20 @@ let
   archType =
     if (stdenv.hostPlatform.system == "x86_64-linux") then "amd64" else "arm64";
 
-  buildUsers = [ "nixbld:x:30000:30000:Nix build user 0:/var/empty:/noshell" ] ++ (builtins.genList (i: 
+  buildUsers = [ "nixbld:x:30000:30000:Nix build user 0:/var/empty:/noshell" ] ++ (builtins.genList
+    (i:
       let
         userNum = i + 1;
         uid = 30000 + userNum;
       in
-        "nixbld${toString userNum}:x:${toString uid}:30000:Nix build user ${toString userNum}:/var/empty:/noshell"
+      "nixbld${toString userNum}:x:${toString uid}:30000:Nix build user ${toString userNum}:/var/empty:/noshell"
     ) 32);
-  buildGroup = [ (builtins.concatStringsSep "," ([ "nixbld:x:30000:nixbld" ] ++ (builtins.genList (i:
-      "nixbld${toString i}"
-    ) 32)))];
+  buildGroup = [
+    (builtins.concatStringsSep "," ([ "nixbld:x:30000:nixbld" ] ++ (builtins.genList
+      (i:
+        "nixbld${toString i}"
+      ) 32)))
+  ];
 in
 dockerTools.buildImage {
   name = "iglu-builder";
