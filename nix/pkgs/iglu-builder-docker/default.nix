@@ -7,11 +7,27 @@
 , cachix
 , stdenv
 , toybox
+, man
 }:
 
 let
   archType =
     if (stdenv.hostPlatform.system == "x86_64-linux") then "amd64" else "arm64";
+
+  buildUsers = [ "nixbld:x:30000:30000:Nix build user 0:/var/empty:/noshell" ] ++ (builtins.genList
+    (i:
+      let
+        userNum = i + 1;
+        uid = 30000 + userNum;
+      in
+      "nixbld${toString userNum}:x:${toString uid}:30000:Nix build user ${toString userNum}:/var/empty:/noshell"
+    ) 32);
+  buildGroup = [
+    (builtins.concatStringsSep "," ([ "nixbld:x:30000:nixbld" ] ++ (builtins.genList
+      (i:
+        "nixbld${toString i}"
+      ) 32)))
+  ];
 in
 dockerTools.buildImage {
   name = "iglu-builder";
@@ -27,10 +43,10 @@ dockerTools.buildImage {
       cachix
       tini
       caCertificates
+      man
       (fakeNss.override {
-        extraPasswdLines =
-          [ "nixbld:x:30000:30000:Build user:/var/empty:/noshell" ];
-        extraGroupLines = [ "nixbld:x:30000:nixbld" ];
+        extraPasswdLines = buildUsers;
+        extraGroupLines = buildGroup;
       })
     ];
     pathsToLink = [ "/bin" "/etc" "/var" ];
@@ -41,6 +57,7 @@ dockerTools.buildImage {
       "NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/tags/25.05.tar.gz"
     ];
     ExposedPorts = { "3000/tcp" = { }; };
-    Cmd = [ "/bin/tini" "--" "/bin/iglu-builder" ];
+    Cmd = [ "/bin/iglu-builder" ];
+    Entrypoint = [ "/bin/tini" ];
   };
 }
