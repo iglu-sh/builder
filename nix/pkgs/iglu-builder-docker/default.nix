@@ -1,4 +1,5 @@
 { dockerTools
+, writeTextFile
 , iglu
 , bash
 , buildEnv
@@ -47,6 +48,15 @@ dockerTools.buildImageWithNixDb {
       (fakeNss.override {
         extraPasswdLines = buildUsers;
         extraGroupLines = buildGroup;
+      })
+      (writeTextFile {
+        name = "nix.conf";
+        destination = "/etc/nix/nix.conf";
+        text = ''
+          accept-flake-config = true
+          experimental-features = nix-command flakes
+          max-jobs = auto
+        '';
       })
     ];
     pathsToLink = [ "/bin" "/etc" "/var" ];
