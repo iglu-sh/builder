@@ -29,7 +29,7 @@ let
       ) 32)))
   ];
 in
-dockerTools.buildImage {
+dockerTools.buildImageWithNixDb {
   name = "iglu-builder";
   tag = "v${iglu.iglu-builder.version}-${archType}";
 
