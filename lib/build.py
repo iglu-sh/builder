@@ -186,7 +186,7 @@ def build(args: argparse.Namespace) -> None:
             ]
         stdout.write(f"Start building...\n")
         child = Popen(
-            args.command.split(" ") + ["--extra-experimental-features", "nix-command", "--extra-experimental-features", "flakes"] + substituter_option,
+            args.command.split(" ") + substituter_option,
             stdout=PIPE,
             stderr=STDOUT,
             text=True,
@@ -218,7 +218,7 @@ def prepare_cachix(args: argparse.Namespace) -> None:
     }
 
     cachix_config = template.render(data)
-    with open(args.dir + "/cachix.dhall", "w") as f:
+    with open(os.path.join(args.dir, "cachix.dhall"), "w") as f:
         f.write(cachix_config)
 
 def start_watcher(args: argparse.Namespace) -> Popen[str]:
