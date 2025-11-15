@@ -218,7 +218,7 @@ def prepare_cachix(args: argparse.Namespace) -> None:
     }
 
     cachix_config = template.render(data)
-    with open(args.dir + "/cachix.dhall", "w") as f:
+    with open(os.path.join(args.dir, "cachix.dhall"), "w") as f:
         f.write(cachix_config)
 
 def start_watcher(args: argparse.Namespace) -> Popen[str]:
