@@ -13,21 +13,20 @@ writeShellScriptBin "entrypoint.sh" ''
       if [[ $docker_arch == x86_64* ]]; then
         echo "Enable arm64 coss-compiling..."
         magic='\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00'
-        mask='\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff'
+        mask='\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\x00\xff\xfe\xff\xff\xff'
         arch='aarch64'
-        interpreter="/usr/bin/qemu-$arch"
-        echo ":qemu-$arch:M::$magic:$mask:$interpreter:" > /proc/sys/fs/binfmt_misc/register
+        interpreter="/run/binfmt/$arch-linux"
       elif  [[ $arch == arm* ]]; then
         echo "Enable x86_64 coss-compiling..."
-        magic='\x7f\x45\x4c\x46\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00'
-        mask='\xff\xff\xff\xff\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfe\xff\xff\xff'
+        magic='\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00'
+        mask='\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff'
         arch='x86_64'
-        interpreter="/usr/bin/qemu-$arch"
-        echo ":qemu-$arch:M::$magic:$mask:$interpreter:" > /proc/sys/fs/binfmt_misc/register
+        interpreter="/run/binfmt/$arch-linux"
       else
         echo "Cross-compiling on $docker_arch is not supported!"
       fi
 
+      echo ":qemu-$arch:M::$magic:$mask:$interpreter:P" > /proc/sys/fs/binfmt_misc/register
   else
       echo "Container is not running in privileged mode!"
       echo "Cross-compiling is not enabled!"

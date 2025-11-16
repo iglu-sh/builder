@@ -9,6 +9,7 @@
 , stdenv
 , busybox
 , man
+, wrapQemuBinfmtP 
 , qemu-user
 }:
 
@@ -17,7 +18,7 @@ let
   archType =
     if (stdenv.hostPlatform.system == "x86_64-linux") then "amd64" else "arm64";
   ccType =
-    if (stdenv.hostPlatform.system == "x86_64-linux") then "aarch64-linux" else "x86_64-linux";
+    if (stdenv.hostPlatform.system == "x86_64-linux") then "aarch64" else "x86_64";
 
   buildUsers = [ "nixbld:x:30000:30000:Nix build user 0:/var/empty:/noshell" ] ++ (builtins.genList
     (i:
@@ -43,7 +44,7 @@ dockerTools.buildImageWithNixDb {
     paths = with dockerTools; [
       iglu.iglu-builder
       iglu.enable-cc
-      qemu-user
+      (wrapQemuBinfmtP "qemu-${ccType}-binfmt-P" "${qemu-user}/bin/qemu-${ccType}")
       bash
       busybox
       nix
@@ -63,10 +64,14 @@ dockerTools.buildImageWithNixDb {
           accept-flake-config = true
           experimental-features = nix-command flakes
           max-jobs = auto
+          trusted-users = root
 
           # Crosscompiling
-          extra-platforms = ${ccType} 
-          extra-sandbox-paths = /usr/bin
+          extra-platforms = ${ccType}-linux i686-linux
+          extra-sandbox-paths = /run/binfmt
+          sandbox = true
+          sandbox-fallback = false
+          system-features = nixos-test benchmark big-parallel kvm
         '';
       })
     ];
@@ -83,6 +88,10 @@ dockerTools.buildImageWithNixDb {
 
     # create root Home
     mkdir -vp root
+
+    # Create /run/binfmt
+    mkdir -p run/binfmt
+    ln -s ../../bin/qemu-${ccType}-binfmt-P run/binfmt/${ccType}-linux
   '';
 
   config = {
@@ -90,9 +99,11 @@ dockerTools.buildImageWithNixDb {
       # NIX ENVs
       "NIX_BUILD_SHELL=/bin/bash"
       "NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/tags/${nixosVersion}.tar.gz"
+      "BASH_ENV=/etc/profile.d/nix.sh"
+      "ENV=/etc/profile.d/nix.sh"
 
       # Other
-      "PATH=/usr/bin:/bin"
+      "PATH=/root/.nix-profile/bin:/usr/bin:/bin"
       "PAGER=cat"
       "USER=root"
     ];
