@@ -39,11 +39,7 @@
               '';
             };
           };
-          packages = {
-            inherit (nixpkgs.iglu) iglu-builder;
-            inherit (nixpkgs.iglu) iglu-builder-docker;
-            inherit (nixpkgs.iglu) dev-python;
-          };
+          packages = nixpkgs.iglu;
         };
     };
 }

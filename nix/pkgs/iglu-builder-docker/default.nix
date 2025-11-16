@@ -7,14 +7,17 @@
 , nix
 , cachix
 , stdenv
-, toybox
+, busybox
 , man
+, qemu-user
 }:
 
 let
   nixosVersion = "25.05";
   archType =
     if (stdenv.hostPlatform.system == "x86_64-linux") then "amd64" else "arm64";
+  ccType =
+    if (stdenv.hostPlatform.system == "x86_64-linux") then "aarch64-linux" else "x86_64-linux";
 
   buildUsers = [ "nixbld:x:30000:30000:Nix build user 0:/var/empty:/noshell" ] ++ (builtins.genList
     (i:
@@ -39,8 +42,10 @@ dockerTools.buildImageWithNixDb {
     name = "image-root";
     paths = with dockerTools; [
       iglu.iglu-builder
+      iglu.enable-cc
+      qemu-user
       bash
-      toybox
+      busybox
       nix
       cachix
       tini
@@ -54,9 +59,14 @@ dockerTools.buildImageWithNixDb {
         name = "nix.conf";
         destination = "/etc/nix/nix.conf";
         text = ''
+          # Nix
           accept-flake-config = true
           experimental-features = nix-command flakes
           max-jobs = auto
+
+          # Crosscompiling
+          extra-platforms = ${ccType} 
+          extra-sandbox-paths = /usr/bin
         '';
       })
     ];
@@ -77,14 +87,17 @@ dockerTools.buildImageWithNixDb {
 
   config = {
     Env = [
+      # NIX ENVs
       "NIX_BUILD_SHELL=/bin/bash"
       "NIX_PATH=nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/tags/${nixosVersion}.tar.gz"
+
+      # Other
       "PATH=/usr/bin:/bin"
       "PAGER=cat"
       "USER=root"
     ];
     ExposedPorts = { "3000/tcp" = { }; };
     Cmd = [ "/bin/iglu-builder" ];
-    Entrypoint = [ "/bin/tini" ];
+    Entrypoint = [ "/bin/entrypoint.sh" ];
   };
 }
