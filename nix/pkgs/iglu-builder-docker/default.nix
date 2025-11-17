@@ -2,7 +2,7 @@
 , writeTextFile
 , iglu
 , bashInteractive
-, gitReallyMinimal
+, gitMinimal
 , gnutar
 , gzip
 , openssh
@@ -40,6 +40,8 @@ let
         "nixbld${toString i}"
       ) 32)))
   ];
+
+  binfmtQemu = wrapQemuBinfmtP "qemu-${ccType}-binfmt-P" "${qemu-user}/bin/qemu-${ccType}";
 in
 dockerTools.buildImageWithNixDb {
   name = "iglu-builder";
@@ -50,13 +52,13 @@ dockerTools.buildImageWithNixDb {
     paths = with dockerTools; [
       iglu.iglu-builder
       iglu.enable-cc
-      (wrapQemuBinfmtP "qemu-${ccType}-binfmt-P" "${qemu-user}/bin/qemu-${ccType}")
+      binfmtQemu
       bashInteractive
       busybox
 
       # runtime dependencies of nix
       nix
-      gitReallyMinimal
+      gitMinimal
       gnutar
       gzip
       openssh
@@ -83,10 +85,12 @@ dockerTools.buildImageWithNixDb {
 
           # Crosscompiling
           extra-platforms = ${ccType}-linux i686-linux
-          extra-sandbox-paths = /run/binfmt
-          sandbox = true
-          sandbox-fallback = false
+          extra-sandbox-paths = /run/binfmt ${binfmtQemu}
           system-features = nixos-test benchmark big-parallel kvm
+
+          # Sandboxing does currently not work with cross-compiling
+          sandbox = false
+          sandbox-fallback = true
         '';
       })
     ];
