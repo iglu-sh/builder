@@ -15,7 +15,7 @@
 , stdenv
 , busybox
 , man
-, wrapQemuBinfmtP 
+, wrapQemuBinfmtP
 , qemu-user
 }:
 
