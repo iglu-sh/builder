@@ -1,7 +1,13 @@
 { dockerTools
 , writeTextFile
 , iglu
-, bash
+, bashInteractive
+, gitReallyMinimal
+, gnutar
+, gzip
+, openssh
+, xz
+, iana-etc
 , buildEnv
 , tini
 , nix
@@ -45,9 +51,18 @@ dockerTools.buildImageWithNixDb {
       iglu.iglu-builder
       iglu.enable-cc
       (wrapQemuBinfmtP "qemu-${ccType}-binfmt-P" "${qemu-user}/bin/qemu-${ccType}")
-      bash
+      bashInteractive
       busybox
+
+      # runtime dependencies of nix
       nix
+      gitReallyMinimal
+      gnutar
+      gzip
+      openssh
+      xz
+      iana-etc
+
       cachix
       tini
       caCertificates

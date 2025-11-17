@@ -30,6 +30,6 @@ await createRouter(app, {
   additionalMethods: [ "ws" ]
 })
 
-Logger.info("Server ist listening on http://localhost:3000")
+Logger.info("Server is listening on http://localhost:3000")
 app.listen(3000)
 
