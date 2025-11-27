@@ -4,7 +4,8 @@
   "module": "index.ts",
   "scripts": {
     "dev": "bun run --hot ./index.ts",
-    "prod": "bun run ./index.ts"
+    "prod": "bun run ./index.ts",
+    "postinstall": "bunx bun2nix -o ./nix/pkgs/iglu-builder/bun.nix && deadnix -e ./nix/pkgs/iglu-builder/bun.nix && nixpkgs-fmt ./nix/pkgs/iglu-builder/bun.nix"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -1,19 +1,37 @@
-{ buildBunApplication, nix, cachix, iglu }:
+{ bun2nix
+, nix
+, cachix
+, iglu
+, deadnix
+, nixpkgs-fmt
+}:
 
-buildBunApplication {
+bun2nix.writeBunApplication {
+  packageJson = ../../../package.json;
+
   src = ../../..;
 
-  nodeModuleHash = "sha256-j9H6GHQl2K2hI99siY8Ya+qxnLjdfIRYsGeKCKXvZ/I=";
+  bunDeps = bun2nix.fetchBunDeps {
+    bunNix = ./bun.nix;
+  };
 
-  buildInputs = [ iglu.dev-python ];
+  nativeBuildInputs = [
+    deadnix
+    nixpkgs-fmt
+  ];
 
-  bunScript = "prod";
+  buildInputs = [
+    iglu.dev-python
+    nix
+    cachix
+  ];
+
+  dontUseBunBuild = true;
+
+  startScript = "bun run prod";
 
   buildPhase = ''
     patchShebangs lib
   '';
 
-  filesToInstall = [ "index.ts" "routes" "lib" "schemas" ];
-
-  extraBinPaths = [ nix cachix ];
 }
