@@ -39,7 +39,9 @@
         "builder_id":{"type": "number"},
         "push":{"type": "boolean"},
         "target": {"type": "string"},
+        "apikeyid": {"type": "number"},
         "apikey": {"type": "string"},
+        "signingkeyid": {"type": "number"},
         "signingkey": {"type": "string"},
         "buildoutputdir": {"type": "string"}
       },
