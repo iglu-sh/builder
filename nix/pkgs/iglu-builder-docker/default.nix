@@ -11,7 +11,6 @@
 , buildEnv
 , tini
 , nix
-, cachix
 , stdenv
 , busybox
 , man
@@ -65,7 +64,6 @@ dockerTools.buildImageWithNixDb {
       xz
       iana-etc
 
-      cachix
       tini
       caCertificates
       man

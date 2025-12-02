@@ -4,9 +4,10 @@
 , iglu
 , deadnix
 , nixpkgs-fmt
+, lib
 }:
 
-bun2nix.writeBunApplication {
+bun2nix.writeBunApplication rec{
   packageJson = ../../../package.json;
 
   src = ../../..;
@@ -27,6 +28,11 @@ bun2nix.writeBunApplication {
   ];
 
   dontUseBunBuild = true;
+
+  postInstall = ''
+    wrapProgram $out/bin/iglu-builder \
+      --prefix PATH : ${lib.makeBinPath buildInputs}
+  '';
 
   startScript = "bun run prod";
 
