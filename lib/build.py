@@ -178,7 +178,7 @@ def build(args: argparse.Namespace) -> None:
         cachix_option: list[str]
         if not args.no_push:
             # Set cachix options
-            cachix_option = ["cachix", "-c", "./cachix.dhall", "watch-exec", "default"]
+            cachix_option = ["cachix", "-c", "./cachix.dhall", "watch-exec", args.target.split("/")[-1], "--"]
         else:
             cachix_option = []
         # Set substituter option
