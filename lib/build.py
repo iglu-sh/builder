@@ -11,6 +11,8 @@ import os
 from sys import stdout, stderr
 import shutil
 from subprocess import Popen, PIPE, STDOUT
+
+from jsonschema.exceptions import UnknownType
 from jinja2 import Environment, FileSystemLoader
 from git import Repo
 from jsonschema import validate
@@ -173,6 +175,12 @@ def clone(args: argparse.Namespace) -> None:
 def build(args: argparse.Namespace) -> None:
     # Check if command start with nix or nix-build
     if args.command.split(" ")[0] in ["nix", "nix-build"]:
+        cachix_option: list[str]
+        if not args.no_push:
+            # Set cachix options
+            cachix_option = ["cachix", "-c", "./cachix.dhall", "watch-exec", "default"]
+        else:
+            cachix_option = []
         # Set substituter option
         substituter_option = []
         if not args.substituter is None:
@@ -186,7 +194,7 @@ def build(args: argparse.Namespace) -> None:
             ]
         stdout.write(f"Start building...\n")
         child = Popen(
-            args.command.split(" ") + substituter_option,
+            cachix_option + args.command.split(" ") + substituter_option,
             stdout=PIPE,
             stderr=STDOUT,
             text=True,
@@ -221,22 +229,6 @@ def prepare_cachix(args: argparse.Namespace) -> None:
     with open(os.path.join(args.dir, "cachix.dhall"), "w") as f:
         f.write(cachix_config)
 
-def start_watcher(args: argparse.Namespace) -> Popen[str]:
-    stdout.write(f"Start cachix watcher...\n")
-    watcher = Popen(
-        ["cachix", "-c", "./cachix.dhall", "watch-store", "default"],
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-        bufsize=1,
-        cwd=args.dir
-    )
-    if not watcher.stdout is None:
-        os.set_blocking(watcher.stdout.fileno(), False)
-        for line in watcher.stdout:
-            stdout.write(line) 
-    return watcher
-
 # --- Main ---
 def main() -> None:
     args = parse_args()
@@ -250,32 +242,6 @@ def main() -> None:
     if not args.no_clone:
         clone(args)
 
-    if not args.no_push:
-        prepare_cachix(args)
-        watcher = start_watcher(args)
-        build(args)
-
-        lastline = "xyz"
-        if watcher.stdout != None:
-            while watcher.returncode == None and watcher.stdout.readline() != lastline:
-                lastline = watcher.stdout.readline()
-                stdout.write("Waiting for cachix to finish pushing")
-                stdout.flush()
-                counter = 0
-                while counter < 7:
-                    stdout.write(".")
-                    stdout.flush()
-                    sleep(2)
-                    counter = counter + 1
-                stdout.write("\n")
-                stdout.flush()
-
-        if watcher.returncode != None and watcher.returncode != 0:
-            exit(1)
-        elif watcher.returncode == None:
-            watcher.terminate()
-            exit(0)
-    else:
-        build(args)
+    build(args)
 
 main()
